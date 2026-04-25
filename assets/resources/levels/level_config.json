@@ -1,0 +1,24 @@
+{
+  "levels": [
+    { "level": 1,  "gridSize": 4, "blankRatio": 0.00, "isTutorial": true,  "note": "Tutorial, no stamina cost" },
+    { "level": 2,  "gridSize": 6, "blankRatio": 0.10, "isTutorial": false, "note": "Transition level" },
+    { "level": 3,  "gridSize": 8, "blankRatio": 0.20, "isTutorial": false, "note": "First full level" },
+    { "level": 4,  "gridSize": 8, "blankRatio": 0.224, "isTutorial": false },
+    { "level": 5,  "gridSize": 8, "blankRatio": 0.247, "isTutorial": false },
+    { "level": 6,  "gridSize": 8, "blankRatio": 0.271, "isTutorial": false },
+    { "level": 7,  "gridSize": 8, "blankRatio": 0.294, "isTutorial": false },
+    { "level": 8,  "gridSize": 8, "blankRatio": 0.318, "isTutorial": false },
+    { "level": 9,  "gridSize": 8, "blankRatio": 0.341, "isTutorial": false },
+    { "level": 10, "gridSize": 8, "blankRatio": 0.365, "isTutorial": false },
+    { "level": 11, "gridSize": 8, "blankRatio": 0.388, "isTutorial": false },
+    { "level": 12, "gridSize": 8, "blankRatio": 0.412, "isTutorial": false },
+    { "level": 13, "gridSize": 8, "blankRatio": 0.435, "isTutorial": false },
+    { "level": 14, "gridSize": 8, "blankRatio": 0.459, "isTutorial": false },
+    { "level": 15, "gridSize": 8, "blankRatio": 0.482, "isTutorial": false },
+    { "level": 16, "gridSize": 8, "blankRatio": 0.506, "isTutorial": false },
+    { "level": 17, "gridSize": 8, "blankRatio": 0.529, "isTutorial": false },
+    { "level": 18, "gridSize": 8, "blankRatio": 0.553, "isTutorial": false },
+    { "level": 19, "gridSize": 8, "blankRatio": 0.576, "isTutorial": false },
+    { "level": 20, "gridSize": 8, "blankRatio": 0.60,  "isTutorial": false, "note": "Final level" }
+  ]
+}
