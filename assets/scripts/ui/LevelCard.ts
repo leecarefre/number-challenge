@@ -11,13 +11,13 @@ const CARD_W = 200;
 const CARD_H = 200;
 
 // ── Color palette ──────────────────────────────────────────────────────────────
-const C_UNLOCKED   = new Color( 32,  68, 142, 255);
-const C_THREE_STAR = new Color( 90,  62,  12, 255);
-const C_LOCKED     = new Color( 24,  24,  44, 255);
-const C_NUM        = new Color(210, 225, 255, 255);
-const C_NUM_LOCK   = new Color( 52,  52,  82, 255);
-const C_GOLD       = new Color(255, 200,  50, 255);
-const C_STAR_EMPTY = new Color( 48,  68, 115, 255);
+const C_UNLOCKED   = new Color(182,  97,  62, 255);  // #B6613E
+const C_THREE_STAR = new Color(150,  75,  45, 255);  // dark terracotta
+const C_LOCKED     = new Color(210, 200, 185, 255);  // warm gray
+const C_NUM        = new Color(242, 240, 227, 255);  // #F2F0E3
+const C_NUM_LOCK   = new Color(120,  95,  75, 255);  // medium warm brown
+const C_GOLD       = new Color(182,  97,  62, 255);  // #B6613E
+const C_STAR_EMPTY = new Color(210, 190, 170, 255);  // muted warm
 
 @ccclass('LevelCard')
 export class LevelCard extends Component {

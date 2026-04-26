@@ -2893,6 +2893,18 @@
     },
     "_enabled": true,
     "__prefab": null,
+    "shopBgFrame": {
+      "__uuid__": "8be2d953-f08f-4ecb-b2fa-cc05d38b8acf@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    },
+    "homeTabIconFrame": {
+      "__uuid__": "2fbc809e-9ec3-4765-81c8-0709c315abb1@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    },
+    "shopTabIconFrame": {
+      "__uuid__": "24dc7c9b-a275-4aee-9b54-0ab57e11c2c0@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    },
     "staminaLabel": {
       "__id__": 38
     },

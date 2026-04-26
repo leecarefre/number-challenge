@@ -4433,18 +4433,6 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "bgmToggle": {
-      "__id__": 95
-    },
-    "sfxToggle": {
-      "__id__": 98
-    },
-    "langEnToggle": {
-      "__id__": 101
-    },
-    "langJaToggle": {
-      "__id__": 104
-    },
     "_id": "e7ZxcUQ6dLopHB62Fj0aaJ"
   },
   {
@@ -5186,6 +5174,18 @@
     },
     "_enabled": true,
     "__prefab": null,
+    "homeBgFrame": {
+      "__uuid__": "0cd7d7ff-71d6-4ba8-86d1-b38298e21555@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    },
+    "homeTabIconFrame": {
+      "__uuid__": "2fbc809e-9ec3-4765-81c8-0709c315abb1@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    },
+    "shopTabIconFrame": {
+      "__uuid__": "24dc7c9b-a275-4aee-9b54-0ab57e11c2c0@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    },
     "staminaLabel": {
       "__id__": 11
     },

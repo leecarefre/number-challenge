@@ -143,7 +143,11 @@
       "Bash(node add_cameras.js)",
       "Bash(curl -s -X POST \"http://127.0.0.1:3000/api/sceneAdvanced/soft_reload_scene\" -H \"Content-Type: application/json\" -d \"{}\")",
       "Bash(xargs grep *)",
-      "Bash(xargs cat *)"
+      "Bash(xargs cat *)",
+      "Bash(identify D:/ITG/number-challenge/assets/resources/icons/heart.png)",
+      "Bash(python *)",
+      "WebSearch",
+      "Bash(node *)"
     ]
   }
 }

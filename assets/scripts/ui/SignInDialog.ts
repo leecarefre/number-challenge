@@ -18,16 +18,16 @@ const SLOT_GAP = 10;
 
 // ── Color palette ─────────────────────────────────────────────────────────────
 const C_OVERLAY  = new Color(  0,   0,   0, 130);
-const C_PANEL    = new Color( 28,  28,  46, 255);
-const C_SLOT_DEF = new Color( 50,  52,  80, 255);
-const C_CLAIMED  = new Color( 72, 199, 116, 255);
-const C_TODAY    = new Color(255, 200,  50, 255);
-const C_LOCKED   = new Color( 38,  38,  58, 255);
-const C_BTN      = new Color( 80, 160, 255, 255);
-const C_CLOSE    = new Color( 80,  80, 105, 255);
+const C_PANEL    = new Color(255, 252, 244, 255);  // #FFFCF4 light warm cream
+const C_SLOT_DEF = new Color(232, 227, 210, 255);  // warm cream slot
+const C_CLAIMED  = new Color( 72, 199, 116, 255);  // keep green for claimed ✓
+const C_TODAY    = new Color(182,  97,  62, 255);  // #B6613E today highlight
+const C_LOCKED   = new Color(210, 200, 185, 255);  // warm gray locked
+const C_BTN      = new Color(182,  97,  62, 255);  // #B6613E
+const C_CLOSE    = new Color(120,  95,  75, 255);  // medium warm brown
 const C_WHITE    = new Color(255, 255, 255, 255);
-const C_DIM      = new Color(140, 140, 165, 255);
-const C_DARK     = new Color( 20,  20,  35, 255);
+const C_DIM      = new Color(139,  94,  74, 255);  // medium warm brown
+const C_DARK     = new Color( 61,  43,  31, 255);  // dark brown
 
 // [icon name, count text]; gift slot has empty count
 const REWARDS: Array<[string, string]> = [
@@ -75,14 +75,14 @@ export class SignInDialog extends Component {
         this.node.addChild(panel);
 
         // Title
-        const title = _label('Title', '', 30, C_WHITE);
+        const title = _label('Title', '', 30, C_DARK);
         title.setPosition(0, PANEL_H / 2 - 44, 0);
         panel.addChild(title);
         // text set in _refresh so i18n is ready
 
         // Divider line
         const divider = _node('Divider', PANEL_W - 60, 2);
-        _fillRect(divider, new Color(60, 60, 90, 255));
+        _fillRect(divider, new Color(210, 200, 185, 255));
         divider.setPosition(0, PANEL_H / 2 - 72, 0);
         panel.addChild(divider);
 
@@ -122,7 +122,7 @@ export class SignInDialog extends Component {
         const slot = _node(`Day${day}`, SLOT_W, SLOT_H);
         _roundRect(slot, C_SLOT_DEF, 12);
 
-        const dayLbl = _label('Day', `Day ${day}`, 16, C_DIM);
+        const dayLbl = _label('Day', `Day ${day}`, 16, C_DARK);
         dayLbl.setPosition(0, SLOT_H / 2 - 16, 0);
         slot.addChild(dayLbl);
 

@@ -23,8 +23,8 @@ export class BootUI extends Component {
     }
 
     private _applyTheme() {
-        const C_TITLE = new Color(255, 200,  50, 255);
-        const C_LOAD  = new Color(160, 175, 215, 255);
+        const C_TITLE = new Color(182,  97,  62, 255);  // #B6613E
+        const C_LOAD  = new Color(139,  94,  74, 255);
 
         // Use the Canvas's runtime size so the background fills the actual visible
         // viewport on any aspect ratio, and tint the Camera clearColor so any
@@ -34,7 +34,7 @@ export class BootUI extends Component {
         const h = cs?.height ?? 720;
         const camera = (this.node.getChildByName('Camera')
                      ?? this.node.parent?.getChildByName('Camera'))?.getComponent(Camera);
-        if (camera) camera.clearColor = new Color(6, 8, 22, 255);
+        if (camera) camera.clearColor = new Color(242, 240, 227, 255);
 
         // Background – game-style gradient with starfield
         const bg = this.node.getChildByName('Background');
@@ -137,8 +137,6 @@ function _bgChild(node: Node): Node {
 }
 
 function _paintSceneBg(node: Node, w: number, h: number) {
-    // Scene-stored Background nodes carry a leftover cc.Sprite (no spriteFrame)
-    // whose render pass races our Graphics child and leaves a black flash.
     const sp = node.getComponent(Sprite);
     if (sp) sp.enabled = false;
 
@@ -148,38 +146,7 @@ function _paintSceneBg(node: Node, w: number, h: number) {
     bg.getComponent(UITransform)!.setContentSize(w, h);
     const g = bg.getComponent(Graphics)!;
     g.clear();
-
-    // Bands use fillRect which is self-contained (no path accumulation).
-    // Cocos Graphics has no beginPath(); calling rect()+fill() in a loop re-fills
-    // the accumulated path with the latest color, leaving a solid block.
-    const TOP    = [ 6,  8, 22];
-    const MID    = [22, 24, 52];
-    const BANDS  = 36;
-    for (let i = 0; i < BANDS; i++) {
-        const t = i / (BANDS - 1);
-        const k = t < 0.5 ? t * 2 : (1 - t) * 2;
-        const r  = Math.round(TOP[0] + (MID[0] - TOP[0]) * k);
-        const gg = Math.round(TOP[1] + (MID[1] - TOP[1]) * k);
-        const b  = Math.round(TOP[2] + (MID[2] - TOP[2]) * k);
-        g.fillColor = new Color(r, gg, b, 255);
-        const y0 = -h / 2 + (h * i) / BANDS;
-        const yh = h / BANDS + 1;
-        g.fillRect(-w / 2, y0, w, yh);
-    }
-
-    // Stars share one color, so build all circles into the path and fill once.
-    let seed = 1337;
-    const rand = () => {
-        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-        return seed / 0x7fffffff;
-    };
-    const STAR_COUNT = Math.max(40, Math.floor((w * h) / 14000));
-    g.fillColor = new Color(255, 220, 160, 70);
-    for (let i = 0; i < STAR_COUNT; i++) {
-        const x  = -w / 2 + rand() * w;
-        const y  = -h / 2 + rand() * h;
-        const rr = 1 + rand() * 1.8;
-        g.circle(x, y, rr);
-    }
+    g.fillColor = new Color(242, 240, 227, 255);  // #F2F0E3
+    g.rect(-w / 2, -h / 2, w, h);
     g.fill();
 }

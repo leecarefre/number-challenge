@@ -1,6 +1,6 @@
 import {
     _decorator, Component, Label, Node, ScrollView, Prefab, instantiate,
-    Button, Color, Graphics, Sprite, Camera, UITransform, UIOpacity,
+    Button, Color, Graphics, Sprite, SpriteFrame, Camera, UITransform, UIOpacity,
     Layout, Size,
 } from 'cc';
 import { createIconNode } from './IconUtil';
@@ -15,6 +15,9 @@ const { ccclass, property } = _decorator;
 
 @ccclass('HomeUI')
 export class HomeUI extends Component {
+    @property(SpriteFrame) homeBgFrame: SpriteFrame | null = null;
+    @property(SpriteFrame) homeTabIconFrame: SpriteFrame | null = null;
+    @property(SpriteFrame) shopTabIconFrame: SpriteFrame | null = null;
     @property(Label)    staminaLabel: Label | null = null;
     @property(Label)    staminaTimerLabel: Label | null = null;
     @property(ScrollView) levelScrollView: ScrollView | null = null;
@@ -70,7 +73,7 @@ export class HomeUI extends Component {
     // ─── Theme ─────────────────────────────────────────────────────────────────
 
     private _applyTheme() {
-        const C_NAV = new Color(16, 16, 34, 245);
+        const C_NAV = new Color(182, 97, 62, 245);  // #B6613E
 
         // ── Scene background – fills the actual Canvas runtime size ──
         const cs = this.node.getComponent(UITransform)?.contentSize;
@@ -78,12 +81,24 @@ export class HomeUI extends Component {
         const sh = cs?.height ?? 1334;
         const camera = (this.node.getChildByName('Camera')
                      ?? this.node.parent?.getChildByName('Camera'))?.getComponent(Camera);
-        if (camera) camera.clearColor = new Color(6, 8, 22, 255);
+        if (camera) camera.clearColor = new Color(242, 240, 227, 255);
 
         const bg = this.node.getChildByName('Background');
         if (bg) {
-            _paintSceneBg(bg, sw, sh);
-            bg.setSiblingIndex(0); // furthest back
+            if (this.homeBgFrame) {
+                const imgW = this.homeBgFrame.width;
+                const imgH = this.homeBgFrame.height;
+                const scale = Math.max(sw / imgW, sh / imgH);
+                const ut = bg.getComponent(UITransform) ?? bg.addComponent(UITransform);
+                ut.setContentSize(imgW * scale, imgH * scale);
+                const sp = bg.getComponent(Sprite) ?? bg.addComponent(Sprite);
+                sp.color = new Color(255, 255, 255, 255);
+                sp.sizeMode = Sprite.SizeMode.CUSTOM;
+                sp.spriteFrame = this.homeBgFrame;
+            } else {
+                _paintSceneBg(bg, sw, sh);
+            }
+            bg.setSiblingIndex(0);
         }
 
         // TopBar / BottomNav – cache child refs BEFORE _paintBg inserts __bg__
@@ -95,25 +110,23 @@ export class HomeUI extends Component {
 
         if (topBar) {
             topBar.setPosition(0, 617, 0); // flush to top: 667 - 50
-            _paintBg(topBar, C_NAV);
         }
         if (bottomNav) {
             bottomNav.setPosition(0, -617, 0); // flush to bottom: -667 + 50
-            _paintBg(bottomNav, C_NAV);
         }
 
-        // SignInBtn – reposition, gold pill
+        // SignInBtn – reposition, terracotta pill
         const signInBtn = this.node.getChildByName('SignInBtn');
         if (signInBtn) {
             signInBtn.setPosition(290, 490, 0);
-            _paintPill(signInBtn, new Color(255, 175, 35, 255), 128, 52);
+            _paintPill(signInBtn, new Color(182, 97, 62, 255), 128, 52);
         }
 
-        // FreeStaminaBtn – reposition, blue pill
+        // FreeStaminaBtn – reposition, darker terracotta pill
         const freeBtn = this.node.getChildByName('FreeStaminaBtn');
         if (freeBtn) {
             freeBtn.setPosition(290, 424, 0);
-            _paintPill(freeBtn, new Color(60, 150, 255, 255), 148, 52);
+            _paintPill(freeBtn, new Color(150, 75, 45, 255), 148, 52);
         }
 
         // ── Resize ScrollView to fit between TopBar bottom (y=567) and BottomNav top (y=-567) ──
@@ -132,11 +145,13 @@ export class HomeUI extends Component {
         topBar?.setSiblingIndex(99);
         bottomNav?.setSiblingIndex(99);
 
-        // Tint stamina labels for dark background
-        if (this.staminaLabel)
-            this.staminaLabel.color      = new Color(230, 235, 255, 255);
+        // Tint stamina labels for light background
+        if (this.staminaLabel) {
+            this.staminaLabel.color = new Color( 61,  43, 31, 255);
+            _attachIcon(this.staminaLabel.node, 'energy', 28, -52, 0);
+        }
         if (this.staminaTimerLabel)
-            this.staminaTimerLabel.color = new Color(140, 155, 210, 255);
+            this.staminaTimerLabel.color = new Color(139,  94, 74, 255);
 
         // ── Replace label "?" placeholders with sprite icons ──
         const i18n = I18nManager.inst;
@@ -156,10 +171,17 @@ export class HomeUI extends Component {
 
         // BottomNav tabs: icon (left) + label (right) – use cached refs.
         // Register Labels with I18nManager so they auto-refresh on language switch.
-        const homeLbl = _setTabIcon(homeTab, 'home', new Color(255, 200, 50, 255));
-        const shopLbl = _setTabIcon(shopTab, 'cart', new Color(180, 190, 220, 255));
+        const C_TAB_ACTIVE   = new Color(182,  97,  62, 255);  // terracotta text on milky active block
+        const C_TAB_INACTIVE = new Color(242, 240, 227, 255);  // milky text on terracotta inactive block
+        const C_TAB_BG       = new Color(222, 218, 205, 255);  // active block: slightly deeper than bg
+        const C_TAB_RED      = new Color(182,  97,  62, 245);  // inactive block: terracotta
+        const homeLbl = _setTabIcon(homeTab, 'home', C_TAB_ACTIVE,   this.homeTabIconFrame);
+        const shopLbl = _setTabIcon(shopTab, 'cart', C_TAB_INACTIVE, this.shopTabIconFrame);
         if (homeLbl) i18n.registerLabel(homeLbl, 'btn_home');
         if (shopLbl) i18n.registerLabel(shopLbl, 'btn_shop');
+        // Two connected full-width rectangles: home = active (milky), shop = inactive (terracotta)
+        _paintTabBg(homeTab, C_TAB_BG,  375, 100, 0);
+        _paintTabBg(shopTab, C_TAB_RED, 375, 100, 0);
 
         // Stamina timer string is dynamic (uses params), so refresh via callback.
         this._unregisterLang?.();
@@ -368,8 +390,6 @@ function _paintBg(node: Node, color: Color) {
 }
 
 function _paintSceneBg(node: Node, w: number, h: number) {
-    // Scene-stored Background nodes carry a leftover cc.Sprite (no spriteFrame)
-    // whose render pass races our Graphics child and leaves a black flash.
     const sp = node.getComponent(Sprite);
     if (sp) sp.enabled = false;
 
@@ -379,39 +399,8 @@ function _paintSceneBg(node: Node, w: number, h: number) {
     bg.getComponent(UITransform)!.setContentSize(w, h);
     const g = bg.getComponent(Graphics)!;
     g.clear();
-
-    // Bands use fillRect (self-contained, no path accumulation). Cocos Graphics
-    // has no beginPath(), so rect()+fill() in a loop re-fills the accumulated
-    // path with the latest color and leaves a solid block.
-    const TOP   = [ 6,  8, 22];
-    const MID   = [22, 24, 52];
-    const BANDS = 36;
-    for (let i = 0; i < BANDS; i++) {
-        const t = i / (BANDS - 1);
-        const k = t < 0.5 ? t * 2 : (1 - t) * 2;
-        const r  = Math.round(TOP[0] + (MID[0] - TOP[0]) * k);
-        const gg = Math.round(TOP[1] + (MID[1] - TOP[1]) * k);
-        const b  = Math.round(TOP[2] + (MID[2] - TOP[2]) * k);
-        g.fillColor = new Color(r, gg, b, 255);
-        const y0 = -h / 2 + (h * i) / BANDS;
-        const yh = h / BANDS + 1;
-        g.fillRect(-w / 2, y0, w, yh);
-    }
-
-    // Stars share one color: build the whole path then fill once.
-    let seed = 1337;
-    const rand = () => {
-        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-        return seed / 0x7fffffff;
-    };
-    const STAR_COUNT = Math.max(40, Math.floor((w * h) / 14000));
-    g.fillColor = new Color(255, 220, 160, 70);
-    for (let i = 0; i < STAR_COUNT; i++) {
-        const x  = -w / 2 + rand() * w;
-        const y  = -h / 2 + rand() * h;
-        const rr = 1 + rand() * 1.8;
-        g.circle(x, y, rr);
-    }
+    g.fillColor = new Color(242, 240, 227, 255);  // #F2F0E3
+    g.rect(-w / 2, -h / 2, w, h);
     g.fill();
 }
 
@@ -470,8 +459,45 @@ function _attachText(parent: Node | null | undefined, text: string, size: number
     return n;
 }
 
+function _paintTabBg(node: Node | null | undefined, color: Color | null,
+                     w: number, h: number, r: number) {
+    if (!node) return;
+    node.getComponent(UITransform)?.setContentSize(w, h);
+    const bg = _bgChild(node);
+    bg.getComponent(UITransform)!.setContentSize(w, h);
+    const g = bg.getComponent(Graphics)!;
+    g.clear();
+    if (color) {
+        g.fillColor = color;
+        if (r > 0) g.roundRect(-w / 2, -h / 2, w, h, r);
+        else        g.rect(-w / 2, -h / 2, w, h);
+        g.fill();
+    }
+}
+
+function _attachSpriteIcon(parent: Node | null | undefined, frame: SpriteFrame,
+                          size: number, x = 0, y = 0): Node | null {
+    if (!parent) return null;
+    const name = '__tab-sprite__';
+    let icon = parent.getChildByName(name);
+    if (!icon) {
+        icon = new Node(name);
+        icon.addComponent(UITransform).setContentSize(size, size);
+        const sp = icon.addComponent(Sprite);
+        sp.sizeMode = Sprite.SizeMode.CUSTOM;
+        sp.spriteFrame = frame;
+        parent.addChild(icon);
+    } else {
+        icon.getComponent(UITransform)?.setContentSize(size, size);
+        const sp = icon.getComponent(Sprite);
+        if (sp) sp.spriteFrame = frame;
+    }
+    icon.setPosition(x, y, 0);
+    return icon;
+}
+
 function _setTabIcon(tab: Node | null | undefined, iconName: string,
-                     textColor: Color): Label | null {
+                     textColor: Color, frame: SpriteFrame | null = null): Label | null {
     if (!tab) return null;
     // Repurpose existing scene label – caller registers it with I18nManager.
     const existingLbl = tab.children[0]?.getComponent(Label) ?? null;
@@ -480,6 +506,7 @@ function _setTabIcon(tab: Node | null | undefined, iconName: string,
         existingLbl.fontSize = 22;
         tab.children[0].setPosition(18, 0, 0);
     }
-    _attachIcon(tab, iconName, 36, -42, 0);
+    if (frame) _attachSpriteIcon(tab, frame, 36, -42, 0);
+    else        _attachIcon(tab, iconName, 36, -42, 0);
     return existingLbl;
 }

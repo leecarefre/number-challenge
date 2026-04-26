@@ -16,15 +16,15 @@ const ROW_H   = 70;
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 const C_OVERLAY  = new Color(  0,   0,   0, 130);
-const C_PANEL    = new Color( 24,  24,  44, 255);
-const C_ROW      = new Color( 36,  38,  68, 255);
-const C_TOGGLE_OFF = new Color( 60,  64,  96, 255);
-const C_TOGGLE_ON  = new Color( 80, 160, 255, 255);
-const C_LANG_ON  = new Color(255, 200,  50, 255);
-const C_CLOSE_BG = new Color( 48,  50,  82, 255);
-const C_GOLD     = new Color(255, 200,  50, 255);
-const C_TXT      = new Color(230, 235, 255, 255);
-const C_DIM      = new Color(160, 175, 215, 255);
+const C_PANEL    = new Color(255, 252, 244, 255);  // #FFFCF4 light warm cream
+const C_ROW      = new Color(232, 227, 210, 255);  // warm cream row
+const C_TOGGLE_OFF = new Color(200, 190, 175, 255);
+const C_TOGGLE_ON  = new Color(182,  97,  62, 255);  // #B6613E
+const C_LANG_ON  = new Color(242, 240, 227, 255);  // #F2F0E3 label on selected row
+const C_CLOSE_BG = new Color(182,  97,  62, 255);  // #B6613E
+const C_GOLD     = new Color(182,  97,  62, 255);  // #B6613E title
+const C_TXT      = new Color( 61,  43,  31, 255);  // dark brown
+const C_DIM      = new Color(139,  94,  74, 255);  // medium warm brown
 const C_WHITE    = new Color(255, 255, 255, 255);
 
 @ccclass('SettingsPanel')

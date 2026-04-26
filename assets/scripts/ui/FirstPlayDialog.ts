@@ -14,12 +14,12 @@ const PANEL_H = 360;
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 const C_OVERLAY = new Color(  0,   0,   0, 130);
-const C_PANEL   = new Color( 24,  24,  44, 255);
-const C_BTN_PRI = new Color( 80, 160, 255, 255);
-const C_BTN_SEC = new Color( 64,  64,  90, 255);
-const C_GOLD    = new Color(255, 200,  50, 255);
+const C_PANEL   = new Color(255, 252, 244, 255);  // #FFFCF4 light warm cream
+const C_BTN_PRI = new Color(182,  97,  62, 255);  // #B6613E
+const C_BTN_SEC = new Color(120,  95,  75, 255);  // medium warm brown
+const C_GOLD    = new Color(182,  97,  62, 255);  // #B6613E title
 const C_WHITE   = new Color(255, 255, 255, 255);
-const C_DIM     = new Color(190, 200, 230, 255);
+const C_DIM     = new Color( 61,  43,  31, 255);  // dark brown text
 
 @ccclass('FirstPlayDialog')
 export class FirstPlayDialog extends Component {

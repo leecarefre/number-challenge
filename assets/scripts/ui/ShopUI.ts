@@ -1,6 +1,6 @@
 import {
     _decorator, Component, Label, Node, Button,
-    Color, Graphics, Sprite, Camera, UITransform, UIOpacity,
+    Color, Graphics, Sprite, SpriteFrame, Camera, UITransform, UIOpacity,
 } from 'cc';
 import { createIconNode } from './IconUtil';
 import { DataManager } from '../core/DataManager';
@@ -17,6 +17,9 @@ const STORAGE_KEY_ITEM_COUNTS = 'shop_item_counts';
 
 @ccclass('ShopUI')
 export class ShopUI extends Component {
+    @property(SpriteFrame) shopBgFrame: SpriteFrame | null = null;
+    @property(SpriteFrame) homeTabIconFrame: SpriteFrame | null = null;
+    @property(SpriteFrame) shopTabIconFrame: SpriteFrame | null = null;
     @property(Label) staminaLabel: Label | null = null;
     @property(Label) hintCountLabel: Label | null = null;
     @property(Label) rangeHintCountLabel: Label | null = null;
@@ -71,12 +74,12 @@ export class ShopUI extends Component {
             }
         });
 
-        const C_NAV      = new Color( 16,  16,  34, 245);
-        const C_SECTION  = new Color( 26,  28,  52, 230);
-        const C_BTN      = new Color( 80, 160, 255, 255);
-        const C_BTN_GOLD = new Color(220, 160,  30, 255);
-        const C_TXT      = new Color(220, 230, 255, 255);
-        const C_TITLE    = new Color(255, 200,  50, 255);
+        const C_NAV      = new Color(182,  97,  62, 245);  // #B6613E
+        const C_SECTION  = new Color(232, 227, 210, 230);
+        const C_BTN      = new Color(182,  97,  62, 255);  // #B6613E
+        const C_BTN_GOLD = new Color(150,  75,  45, 255);
+        const C_TXT      = new Color( 61,  43,  31, 255);
+        const C_TITLE    = new Color(242, 240, 227, 255);  // #F2F0E3 on terracotta nav
 
         // Canvas background – Shop scene has no Background node, create one.
         // Use the Canvas's runtime size so the gradient fills the actual viewport.
@@ -85,7 +88,7 @@ export class ShopUI extends Component {
         const sh = cs?.height ?? 1334;
         const camera = (this.node.getChildByName('Camera')
                      ?? this.node.parent?.getChildByName('Camera'))?.getComponent(Camera);
-        if (camera) camera.clearColor = new Color(6, 8, 22, 255);
+        if (camera) camera.clearColor = new Color(242, 240, 227, 255);
 
         let cBg = this.node.getChildByName('Background');
         if (!cBg) {
@@ -94,7 +97,19 @@ export class ShopUI extends Component {
             this.node.addChild(cBg);
         }
         cBg.setSiblingIndex(0);
-        _paintSceneBg(cBg, sw, sh);
+
+        if (this.shopBgFrame) {
+            const imgW = this.shopBgFrame.width;
+            const imgH = this.shopBgFrame.height;
+            const scale = Math.max(sw / imgW, sh / imgH);
+            const ut = cBg.getComponent(UITransform)!;
+            ut.setContentSize(imgW * scale, imgH * scale);
+            const sp = cBg.getComponent(Sprite) ?? cBg.addComponent(Sprite);
+            sp.sizeMode = Sprite.SizeMode.CUSTOM;
+            sp.spriteFrame = this.shopBgFrame;
+        } else {
+            _paintSceneBg(cBg, sw, sh);
+        }
 
         // Cache all child refs BEFORE painting (paint adds __bg__ at index 0)
         const header   = this.node.getChildByName('Header');
@@ -118,12 +133,11 @@ export class ShopUI extends Component {
             const hUt = header.getComponent(UITransform);
             if (hUt) hUt.setContentSize(750, 100);
             header.setPosition(0, 617, 0); // flush top
-            _paintHeaderBg(header, C_NAV, new Color(8, 8, 22, 250), C_TITLE);
 
             // Title centered, bigger and bolder
             if (headerTitleNode) headerTitleNode.setPosition(0, 0, 0);
             if (headerTitleLbl) {
-                headerTitleLbl.color    = C_TITLE;
+                headerTitleLbl.color    = C_TXT;
                 headerTitleLbl.fontSize = 36;
                 headerTitleLbl.isBold   = true;
             }
@@ -145,16 +159,13 @@ export class ShopUI extends Component {
         // BottomNav (flush bottom: y=-667 + 50)
         if (nav) {
             nav.setPosition(0, -617, 0);
-            _paintBg(nav, C_NAV);
         }
 
-        // Section backgrounds
-        [dailySec, stam].forEach(s => {
-            if (!s) return;
-            _paintRoundedFixed(s, C_SECTION, 660, 260, 20);
-        });
-        if (dailyTitleLbl) { dailyTitleLbl.color = C_TITLE; dailyTitleLbl.isBold = true; }
-        if (stamTitleLbl)  { stamTitleLbl.color  = C_TITLE; stamTitleLbl.isBold  = true; }
+        // Section backgrounds and positions (pushed lower in the viewport)
+        if (dailySec) { _paintRoundedFixed(dailySec, C_SECTION, 660, 260, 20); dailySec.setPosition(0, 160, 0); }
+        if (stam)     { _paintRoundedFixed(stam,     C_SECTION, 660, 260, 20); stam.setPosition(0, -150, 0); }
+        if (dailyTitleLbl) { dailyTitleLbl.color = C_TXT; dailyTitleLbl.isBold = true; }
+        if (stamTitleLbl)  { stamTitleLbl.color  = C_TXT; stamTitleLbl.isBold  = true; }
 
         // Style action buttons in sections
         if (dailySec) {
@@ -165,9 +176,9 @@ export class ShopUI extends Component {
         this._styleActionBtn(stam50Btn, C_BTN, C_TXT);
 
         // Stamina label color
-        if (this.staminaLabel)        this.staminaLabel.color        = C_TXT;
-        if (this.hintCountLabel)      this.hintCountLabel.color      = C_TXT;
-        if (this.rangeHintCountLabel) this.rangeHintCountLabel.color = C_TXT;
+        if (this.staminaLabel)        this.staminaLabel.color        = new Color( 61, 43, 31, 255);
+        if (this.hintCountLabel)      this.hintCountLabel.color      = new Color( 61, 43, 31, 255);
+        if (this.rangeHintCountLabel) this.rangeHintCountLabel.color = new Color( 61, 43, 31, 255);
 
         // ── Replace scene-stored "?" placeholders with text + sprite icons ──
         const i18n = I18nManager.inst;
@@ -195,10 +206,16 @@ export class ShopUI extends Component {
         }
 
         // BottomNav tabs – use cached refs
-        const homeLbl = _setTabIcon(homeTab, 'home', new Color(180, 190, 220, 255));
-        const shopLbl = _setTabIcon(shopTab, 'cart', new Color(255, 200, 50, 255));
+        const C_TAB_ACTIVE   = new Color(182,  97,  62, 255);  // terracotta text on milky active block
+        const C_TAB_INACTIVE = new Color(242, 240, 227, 255);  // milky text on terracotta inactive block
+        const C_TAB_BG       = new Color(222, 218, 205, 255);  // active block: slightly deeper than bg
+        const homeLbl = _setTabIcon(homeTab, 'home', C_TAB_INACTIVE, this.homeTabIconFrame);
+        const shopLbl = _setTabIcon(shopTab, 'cart', C_TAB_ACTIVE,   this.shopTabIconFrame);
         if (homeLbl) i18n.registerLabel(homeLbl, 'btn_home');
         if (shopLbl) i18n.registerLabel(shopLbl, 'btn_shop');
+        // Two connected full-width rectangles: home = inactive (terracotta), shop = active (milky)
+        _paintTabBg(homeTab, C_NAV,    375, 100, 0);
+        _paintTabBg(shopTab, C_TAB_BG, 375, 100, 0);
 
         // Daily-limit labels use params – refresh via callback.
         this._unregisterLang?.();
@@ -332,8 +349,6 @@ function _paintBg(node: Node, color: Color) {
 }
 
 function _paintSceneBg(node: Node, w: number, h: number) {
-    // Scene-stored Background nodes carry a leftover cc.Sprite (no spriteFrame)
-    // whose render pass races our Graphics child and leaves a black flash.
     const sp = node.getComponent(Sprite);
     if (sp) sp.enabled = false;
 
@@ -343,39 +358,8 @@ function _paintSceneBg(node: Node, w: number, h: number) {
     bg.getComponent(UITransform)!.setContentSize(w, h);
     const g = bg.getComponent(Graphics)!;
     g.clear();
-
-    // Bands use fillRect (self-contained, no path accumulation). Cocos Graphics
-    // has no beginPath(), so rect()+fill() in a loop re-fills the accumulated
-    // path with the latest color and leaves a solid block.
-    const TOP   = [ 6,  8, 22];
-    const MID   = [22, 24, 52];
-    const BANDS = 36;
-    for (let i = 0; i < BANDS; i++) {
-        const t = i / (BANDS - 1);
-        const k = t < 0.5 ? t * 2 : (1 - t) * 2;
-        const r  = Math.round(TOP[0] + (MID[0] - TOP[0]) * k);
-        const gg = Math.round(TOP[1] + (MID[1] - TOP[1]) * k);
-        const b  = Math.round(TOP[2] + (MID[2] - TOP[2]) * k);
-        g.fillColor = new Color(r, gg, b, 255);
-        const y0 = -h / 2 + (h * i) / BANDS;
-        const yh = h / BANDS + 1;
-        g.fillRect(-w / 2, y0, w, yh);
-    }
-
-    // Stars share one color: build the whole path then fill once.
-    let seed = 1337;
-    const rand = () => {
-        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-        return seed / 0x7fffffff;
-    };
-    const STAR_COUNT = Math.max(40, Math.floor((w * h) / 14000));
-    g.fillColor = new Color(255, 220, 160, 70);
-    for (let i = 0; i < STAR_COUNT; i++) {
-        const x  = -w / 2 + rand() * w;
-        const y  = -h / 2 + rand() * h;
-        const rr = 1 + rand() * 1.8;
-        g.circle(x, y, rr);
-    }
+    g.fillColor = new Color(242, 240, 227, 255);  // #F2F0E3
+    g.rect(-w / 2, -h / 2, w, h);
     g.fill();
 }
 
@@ -463,8 +447,45 @@ function _attachText(parent: Node | null | undefined, text: string, size: number
     return n;
 }
 
+function _paintTabBg(node: Node | null | undefined, color: Color | null,
+                     w: number, h: number, r: number) {
+    if (!node) return;
+    node.getComponent(UITransform)?.setContentSize(w, h);
+    const bg = _bgChild(node);
+    bg.getComponent(UITransform)!.setContentSize(w, h);
+    const g = bg.getComponent(Graphics)!;
+    g.clear();
+    if (color) {
+        g.fillColor = color;
+        if (r > 0) g.roundRect(-w / 2, -h / 2, w, h, r);
+        else        g.rect(-w / 2, -h / 2, w, h);
+        g.fill();
+    }
+}
+
+function _attachSpriteIcon(parent: Node | null | undefined, frame: SpriteFrame,
+                          size: number, x = 0, y = 0): Node | null {
+    if (!parent) return null;
+    const name = '__tab-sprite__';
+    let icon = parent.getChildByName(name);
+    if (!icon) {
+        icon = new Node(name);
+        icon.addComponent(UITransform).setContentSize(size, size);
+        const sp = icon.addComponent(Sprite);
+        sp.sizeMode = Sprite.SizeMode.CUSTOM;
+        sp.spriteFrame = frame;
+        parent.addChild(icon);
+    } else {
+        icon.getComponent(UITransform)?.setContentSize(size, size);
+        const sp = icon.getComponent(Sprite);
+        if (sp) sp.spriteFrame = frame;
+    }
+    icon.setPosition(x, y, 0);
+    return icon;
+}
+
 function _setTabIcon(tab: Node | null | undefined, iconName: string,
-                     textColor: Color): Label | null {
+                     textColor: Color, frame: SpriteFrame | null = null): Label | null {
     if (!tab) return null;
     const existingLbl = tab.children[0]?.getComponent(Label) ?? null;
     if (existingLbl) {
@@ -472,6 +493,7 @@ function _setTabIcon(tab: Node | null | undefined, iconName: string,
         existingLbl.fontSize = 22;
         tab.children[0].setPosition(18, 0, 0);
     }
-    _attachIcon(tab, iconName, 36, -42, 0);
+    if (frame) _attachSpriteIcon(tab, frame, 36, -42, 0);
+    else        _attachIcon(tab, iconName, 36, -42, 0);
     return existingLbl;
 }
