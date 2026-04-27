@@ -193,7 +193,11 @@ export class HomeUI extends Component {
     private _updateStamina() {
         const d = DataManager.inst.data;
         if (this.staminaLabel) {
-            this.staminaLabel.string = `${d.stamina}/5`;
+            if (DataManager.inst.isUnlimitedStaminaActive()) {
+                this.staminaLabel.string = '∞';
+            } else {
+                this.staminaLabel.string = `${d.stamina}`;
+            }
         }
         const ms = DataManager.inst.staminaNextRecoverMs();
         if (this.staminaTimerLabel) {

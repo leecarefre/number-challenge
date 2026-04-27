@@ -26,6 +26,7 @@
   "stamina_recover_in": "{time}後に回復",
   "lives": "ライフ",
   "level": "レベル {n}",
+  "tutorial_label": "チュートリアル",
 
   "win_title": "クリア！",
   "win_stars": "{stars}つ星獲得！",

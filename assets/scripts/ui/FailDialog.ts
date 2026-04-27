@@ -2,9 +2,9 @@ import {
     _decorator, Component, Node, Label, Color, Button,
     Graphics, UITransform, UIOpacity,
 } from 'cc';
-import { GameManager } from '../core/GameManager';
 import { AudioManager } from '../core/AudioManager';
 import { AdManager } from '../core/AdManager';
+import { GameManager } from '../core/GameManager';
 import { DataManager } from '../core/DataManager';
 import { I18nManager } from '../core/I18nManager';
 import { GameController } from '../gameplay/GameController';
@@ -16,13 +16,13 @@ const PANEL_W = 460;
 const PANEL_H = 400;
 
 // ── Colors ────────────────────────────────────────────────────────────────────
-const C_OVERLAY   = new Color(  0,   0,   0, 130);
-const C_PANEL     = new Color( 24,  24,  44, 255);
-const C_BTN_AD    = new Color(220, 160,  30, 255);
-const C_BTN_HOME  = new Color( 36,  38,  66, 255);
-const C_RED       = new Color(240,  80,  80, 255);
+const C_OVERLAY   = new Color(  0,   0,   0,  76);
+const C_PANEL     = new Color(255, 252, 244, 255);
+const C_BTN_AD    = new Color(182,  97,  62, 255);
+const C_BTN_HOME  = new Color(120,  95,  75, 255);
+const C_RED       = new Color(200,  60,  60, 255);
 const C_WHITE     = new Color(255, 255, 255, 255);
-const C_DIM       = new Color(140, 155, 205, 255);
+const C_DIM       = new Color( 61,  43,  31, 255);
 
 @ccclass('FailDialog')
 export class FailDialog extends Component {
@@ -107,10 +107,7 @@ export class FailDialog extends Component {
 
         DataManager.inst.restoreLife(1);
         this.node.active = false;
-
-        const entry = GameManager.inst.currentLevel;
-        GameManager.inst.setCurrentLevel(entry.level, entry.isTutorial);
-        GameManager.inst.loadScene('Game');
+        this.gameController?.revive();
     }
 
     onBackHome() {

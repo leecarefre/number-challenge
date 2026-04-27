@@ -26,6 +26,7 @@
   "stamina_recover_in": "Recovers in {time}",
   "lives": "Lives",
   "level": "Level {n}",
+  "tutorial_label": "Tutorial",
 
   "win_title": "Level Clear!",
   "win_stars": "You got {stars} star(s)!",

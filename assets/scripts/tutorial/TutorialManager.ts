@@ -36,6 +36,9 @@ export class TutorialManager extends Component {
     startTutorial() {
         this.node.active = true;
         this.skipBtn && (this.skipBtn.active = false);
+        // Push the hint bubble above the 4×4 grid (grid centre ≈ y=15, top row ≈ y=225).
+        // y=370 sits safely between the grid top and the progress bar (y≈547).
+        if (this.bubbleNode) this.bubbleNode.setPosition(0, 370, 0);
         this._goStep(1);
     }
 

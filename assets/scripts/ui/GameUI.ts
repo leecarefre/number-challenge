@@ -27,16 +27,19 @@ export class GameUI extends Component {
     @property(TutorialManager) tutorialManager: TutorialManager | null = null;
 
     private _unregisterLang: (() => void) | null = null;
+    private _progressLabel: Label | null = null;
 
     onLoad() {
         this._applyTheme();
         AudioManager.inst.playBGM('game_bgm');
 
         const entry = GameManager.inst.currentLevel;
-        // Level label uses {n} param – refresh via callback on language switch.
+        // Level label: show "Tutorial" for the intro level, numbered for all others.
         this._unregisterLang = I18nManager.inst.registerCallback(() => {
             if (this.levelLabel) {
-                this.levelLabel.string = I18nManager.inst.t('level', { n: entry.level });
+                this.levelLabel.string = entry.isTutorial
+                    ? I18nManager.inst.t('tutorial_label')
+                    : I18nManager.inst.t('level', { n: entry.level });
             }
         });
 
@@ -86,6 +89,7 @@ export class GameUI extends Component {
 
     private _updateProgress(current: number, total: number) {
         if (this.progressBar) this.progressBar.progress = current / total;
+        if (this._progressLabel) this._progressLabel.string = `${current + 1} / ${total}`;
     }
 
     private _updateItems() {
@@ -224,6 +228,26 @@ export class GameUI extends Component {
         // ProgressBar – tucked just below TopBar (TopBar bottom = 567)
         if (this.progressBar) {
             this.progressBar.node.setPosition(0, 547, 0);
+        }
+
+        // Progress counter label: "current / total" below the bar
+        {
+            const pcName = '__progress-count__';
+            let pcNode = this.node.getChildByName(pcName);
+            if (!pcNode) {
+                pcNode = new Node(pcName);
+                pcNode.addComponent(UITransform).setContentSize(200, 34);
+                this._progressLabel = pcNode.addComponent(Label);
+                this._progressLabel.fontSize = 22;
+                this._progressLabel.isBold   = true;
+                this._progressLabel.color    = new Color(182, 97, 62, 255);
+                this._progressLabel.horizontalAlign = 1; // CENTER
+                this.node.addChild(pcNode);
+            } else {
+                this._progressLabel = pcNode.getComponent(Label);
+            }
+            pcNode.setPosition(0, 518, 0);
+            pcNode.setSiblingIndex(99);
         }
 
         // BottomToolbar – flush bottom (y=-587, height 160 → bottom edge -667)

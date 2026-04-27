@@ -147,7 +147,8 @@
       "Bash(identify D:/ITG/number-challenge/assets/resources/icons/heart.png)",
       "Bash(python *)",
       "WebSearch",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(claude mcp *)"
     ]
   }
 }

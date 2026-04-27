@@ -12,6 +12,7 @@ export interface PlayerData {
 
     stamina: number;
     staminaLastRecoverTime: number;
+    unlimitedStaminaExpiry: number;
 
     lives: number;
     livesResetDate: string;
@@ -50,6 +51,7 @@ function defaultData(): PlayerData {
         levelStars: {},
         stamina: STAMINA_MAX,
         staminaLastRecoverTime: Date.now(),
+        unlimitedStaminaExpiry: 0,
         lives: LIVES_MAX,
         livesResetDate: todayStr(),
         items: { hint: 0, rangeHint: 0 },
@@ -141,6 +143,7 @@ export class DataManager extends Component {
     }
 
     consumeStamina(): boolean {
+        if (this.isUnlimitedStaminaActive()) return true;
         const d = this._data;
         if (d.stamina <= 0) return false;
         if (d.stamina === STAMINA_MAX) {
@@ -152,7 +155,18 @@ export class DataManager extends Component {
     }
 
     addStamina(amount: number) {
-        this._data.stamina = Math.min(STAMINA_MAX, this._data.stamina + amount);
+        this._data.stamina = Math.min(99, this._data.stamina + amount);
+        this.save();
+    }
+
+    isUnlimitedStaminaActive(): boolean {
+        return (this._data.unlimitedStaminaExpiry ?? 0) > Date.now();
+    }
+
+    startUnlimitedStamina(durationMs: number) {
+        const now = Date.now();
+        const base = Math.max(now, this._data.unlimitedStaminaExpiry ?? 0);
+        this._data.unlimitedStaminaExpiry = base + durationMs;
         this.save();
     }
 

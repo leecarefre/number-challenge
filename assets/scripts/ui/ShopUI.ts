@@ -26,6 +26,8 @@ export class ShopUI extends Component {
 
     private _todayCounts: Record<string, number> = { hint: 0, rangeHint: 0 };
     private _unregisterLang: (() => void) | null = null;
+    private _unlimitedBtn: Node | null = null;
+    private _stam50Btn: Node | null = null;
 
     onLoad() {
         this._wireButtons();
@@ -142,18 +144,8 @@ export class ShopUI extends Component {
                 headerTitleLbl.isBold   = true;
             }
 
-            // Stamina display: ⚡ icon + "X/5" on right side
-            if (headerStamNode) {
-                headerStamNode.setPosition(280, 0, 0);
-                if (headerStamLbl) {
-                    headerStamLbl.color    = C_TXT;
-                    headerStamLbl.fontSize = 26;
-                    headerStamLbl.isBold   = true;
-                    // _updateStamina() overrides string at runtime, but clear scene "?" early
-                    if (headerStamLbl.string.includes('?')) headerStamLbl.string = '';
-                }
-                _attachIcon(headerStamNode, 'energy', 36, -50, 0);
-            }
+            // Stamina display not shown in shop header
+            if (headerStamNode) headerStamNode.active = false;
         }
 
         // BottomNav (flush bottom: y=-667 + 50)
@@ -163,7 +155,27 @@ export class ShopUI extends Component {
 
         // Section backgrounds and positions (pushed lower in the viewport)
         if (dailySec) { _paintRoundedFixed(dailySec, C_SECTION, 660, 260, 20); dailySec.setPosition(0, 160, 0); }
-        if (stam)     { _paintRoundedFixed(stam,     C_SECTION, 660, 260, 20); stam.setPosition(0, -150, 0); }
+        if (stam)     { _paintRoundedFixed(stam,     C_SECTION, 660, 350, 20); stam.setPosition(0, -170, 0); }
+
+        // Resize and position the two scene stam buttons; create the 3rd one.
+        stam20Btn?.getComponent(UITransform)?.setContentSize(600, 60);
+        stam20Btn?.setPosition(0, 75, 0);
+        stam50Btn?.getComponent(UITransform)?.setContentSize(600, 60);
+        stam50Btn?.setPosition(0, 0, 0);
+        if (stam) {
+            let ub = stam.getChildByName('__stam-unlim__');
+            if (!ub) {
+                ub = new Node('__stam-unlim__');
+                ub.addComponent(UITransform).setContentSize(600, 60);
+                ub.addComponent(Button);
+                stam.addChild(ub);
+                ub.on(Button.EventType.CLICK, this.onBuyUnlimitedStamina, this);
+            }
+            ub.setPosition(0, -75, 0);
+            this._unlimitedBtn = ub;
+        }
+        this._stam50Btn = stam50Btn;
+
         if (dailyTitleLbl) { dailyTitleLbl.color = C_TXT; dailyTitleLbl.isBold = true; }
         if (stamTitleLbl)  { stamTitleLbl.color  = C_TXT; stamTitleLbl.isBold  = true; }
 
@@ -174,6 +186,7 @@ export class ShopUI extends Component {
         }
         this._styleActionBtn(stam20Btn, C_BTN, C_TXT);
         this._styleActionBtn(stam50Btn, C_BTN, C_TXT);
+        this._styleActionBtn(this._unlimitedBtn, C_BTN, C_TXT);
 
         // Stamina label color
         if (this.staminaLabel)        this.staminaLabel.color        = new Color( 61, 43, 31, 255);
@@ -189,20 +202,27 @@ export class ShopUI extends Component {
             if (dailyTitleLbl) i18n.registerLabel(dailyTitleLbl, 'shop_daily_items');
             const hintBtn  = dailySec.getChildByName('HintAdBtn');
             const rangeBtn = dailySec.getChildByName('RangeHintAdBtn');
-            _hideChildLabels(hintBtn);
-            _hideChildLabels(rangeBtn);
-            _attachIcon(hintBtn,  'hint',  44);
-            _attachIcon(rangeBtn, 'range', 44);
+            _clearAllLabels(hintBtn);
+            _clearAllLabels(rangeBtn);
+            _attachIcon(hintBtn,  'hint',  40, 0,  20);
+            _attachIcon(rangeBtn, 'range', 40, 0,  20);
+            _attachText(hintBtn,  '×1 Ad', 14, C_TITLE, 0, -22);
+            _attachText(rangeBtn, '×1 Ad', 14, C_TITLE, 0, -22);
         }
 
         if (stam) {
             if (stamTitleLbl) i18n.registerLabel(stamTitleLbl, 'shop_stamina');
-            _hideChildLabels(stam20Btn);
-            _hideChildLabels(stam50Btn);
-            _attachIcon(stam20Btn, 'energy', 36, -28);
-            _attachText(stam20Btn, '+20', 24, C_TXT, 22);
-            _attachIcon(stam50Btn, 'energy', 36, -28);
-            _attachText(stam50Btn, '+50', 24, C_TXT, 22);
+            _clearAllLabels(stam20Btn);
+            _clearAllLabels(stam50Btn);
+            _attachIcon(stam20Btn, 'energy', 32, -230, 0);
+            _attachText(stam20Btn, '+20',    24, C_TXT,  -150, 0);
+            _attachText(stam20Btn, '×1 Ad', 15, C_TITLE,  190, 0);
+            _attachIcon(stam50Btn, 'energy', 32, -230, 0);
+            _attachText(stam50Btn, '+50',    24, C_TXT,  -150, 0);
+            _attachNamedText(stam50Btn, '__ad-count__', '×3 Ad', 15, C_TITLE, 190, 0);
+            _clearAllLabels(this._unlimitedBtn);
+            _attachText(this._unlimitedBtn, '∞20min', 22, C_TXT,  -140, 0);
+            _attachNamedText(this._unlimitedBtn, '__ad-count__', '×5 Ad', 15, C_TITLE, 190, 0);
         }
 
         // BottomNav tabs – use cached refs
@@ -235,7 +255,11 @@ export class ShopUI extends Component {
 
     private _updateStamina() {
         if (this.staminaLabel) {
-            this.staminaLabel.string = `${DataManager.inst.data.stamina}/5`;
+            if (DataManager.inst.isUnlimitedStaminaActive()) {
+                this.staminaLabel.string = '∞';
+            } else {
+                this.staminaLabel.string = `${DataManager.inst.data.stamina}`;
+            }
         }
     }
 
@@ -307,11 +331,37 @@ export class ShopUI extends Component {
 
     async onBuyStamina50() {
         AudioManager.inst.playSFX('button_click');
-        // Requires watching ad twice (simplified: just reward 50)
-        const watched = await AdManager.inst.showStaminaAd();
+        const watched = await this._watchAdsWithProgress(this._stam50Btn, 3);
         if (!watched) return;
         DataManager.inst.addStamina(50);
         this._updateStamina();
+    }
+
+    async onBuyUnlimitedStamina() {
+        AudioManager.inst.playSFX('button_click');
+        const watched = await this._watchAdsWithProgress(this._unlimitedBtn, 5);
+        if (!watched) return;
+        DataManager.inst.startUnlimitedStamina(20 * 60 * 1000);
+        this._updateStamina();
+    }
+
+    private _setAdProgress(btn: Node | null, current: number, total: number) {
+        const lbl = btn?.getChildByName('__ad-count__')?.getComponent(Label) ?? null;
+        if (!lbl) return;
+        lbl.string = current > 0 ? `${current}/${total}` : `×${total} Ad`;
+    }
+
+    private async _watchAdsWithProgress(btn: Node | null, count: number): Promise<boolean> {
+        for (let i = 0; i < count; i++) {
+            this._setAdProgress(btn, i + 1, count);
+            const watched = await AdManager.inst.showStaminaAd();
+            if (!watched) {
+                this._setAdProgress(btn, 0, count);
+                return false;
+            }
+        }
+        this._setAdProgress(btn, 0, count);
+        return true;
     }
 
     onHomeBtn() {
@@ -411,6 +461,32 @@ function _hideChildLabels(node: Node | null | undefined) {
         const lbl = c.getComponent(Label);
         if (lbl) lbl.string = '';
     });
+}
+
+function _clearAllLabels(node: Node | null | undefined) {
+    if (!node) return;
+    node.getComponentsInChildren(Label).forEach(lbl => { lbl.string = ''; });
+}
+
+function _attachNamedText(parent: Node | null | undefined, name: string, text: string,
+                           size: number, color: Color, x = 0, y = 0): Node | null {
+    if (!parent) return null;
+    let n = parent.getChildByName(name);
+    if (!n) {
+        n = new Node(name);
+        n.addComponent(UITransform).setContentSize(120, size + 12);
+        const lbl = n.addComponent(Label);
+        lbl.string = text;
+        lbl.fontSize = size;
+        lbl.color = color;
+        lbl.horizontalAlign = 1;
+        parent.addChild(n);
+    } else {
+        const lbl = n.getComponent(Label);
+        if (lbl) { lbl.string = text; lbl.color = color; }
+    }
+    n.setPosition(x, y, 0);
+    return n;
 }
 
 function _attachIcon(parent: Node | null | undefined, iconName: string,

@@ -13,7 +13,7 @@ const PANEL_W = 520;
 const PANEL_H = 360;
 
 // ── Colors ────────────────────────────────────────────────────────────────────
-const C_OVERLAY = new Color(  0,   0,   0, 130);
+const C_OVERLAY = new Color(  0,   0,   0,  76);  // 30 % opacity black
 const C_PANEL   = new Color(255, 252, 244, 255);  // #FFFCF4 light warm cream
 const C_BTN_PRI = new Color(182,  97,  62, 255);  // #B6613E
 const C_BTN_SEC = new Color(120,  95,  75, 255);  // medium warm brown
@@ -35,7 +35,7 @@ export class FirstPlayDialog extends Component {
         const i18n = I18nManager.inst;
 
         // Overlay
-        const overlay = _node('Overlay', 1280, 720);
+        const overlay = _node('Overlay', 750, 1334);
         _fill(overlay, C_OVERLAY);
         this.node.addChild(overlay);
 

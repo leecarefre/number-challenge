@@ -96,6 +96,14 @@ export class GameController extends Component {
         this.gridRenderer!.setRangeHint(this._currentRow, this._currentCol);
     }
 
+    revive() {
+        if (this._state !== 'fail') return;
+        this._lives = DataManager.inst.data.lives;
+        this._state = 'playing';
+        this.inputHandler?.setActive(true);
+        this._callbacks.onLivesChanged?.(this._lives);
+    }
+
     useMagnifier() {
         if (!this.cameraNode) return;
         const cam = this.cameraNode.getComponent(Camera);

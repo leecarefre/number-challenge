@@ -90,9 +90,9 @@ function tryHamiltonianPath(
 export function generateLevel(level: number, seed?: number): LevelData {
     const n = level <= 1 ? 4 : level === 2 ? 6 : 8;
     const total = n * n;
-    const blankRatio = level <= 1 ? 0
-        : level === 2 ? 0.10
-        : 0.20 + (level - 3) * (0.40 / 17);
+    // All levels get blanks. Level 1-2: 30 %; level 3-20: linearly 30 % → 60 %.
+    const blankRatio = level <= 2 ? 0.30
+        : 0.30 + (level - 2) * (0.30 / 18);
 
     const rand = seededRandom(seed ?? (level * 31337 + Date.now()));
 
