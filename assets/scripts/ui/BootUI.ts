@@ -55,6 +55,7 @@ export class BootUI extends Component {
     private async _load() {
         console.log('[BootUI] _load() begin');
         const steps = [
+            { label: 'Initializing SDK...', weight: 0.05, fn: () => this._initSDK() },
             { label: 'Loading data...', weight: 0.15, fn: () => this._waitForData() },
             { label: 'Loading language...', weight: 0.3,  fn: () => I18nManager.inst.init() },
             { label: 'Loading icons...', weight: 0.55, fn: () => preloadIcons() },
@@ -72,6 +73,21 @@ export class BootUI extends Component {
         // Small delay so progress bar visually reaches 100%
         await new Promise(r => setTimeout(r, 300));
         this._proceedFromBoot();
+    }
+
+    private _initSDK(): Promise<void> {
+        return new Promise(resolve => {
+            // Skip in mock environment (Cocos Preview / browser)
+            if (typeof TTMinis === 'undefined' || !(TTMinis.game as any).init) {
+                resolve();
+                return;
+            }
+            (TTMinis.game as any).init({
+                clientKey: 'YOUR_CLIENT_KEY', // ← 替换为真实 client_key
+                success: () => { console.log('[SDK] init ok'); resolve(); },
+                fail: (err: any) => { console.error('[SDK] init fail', err); resolve(); },
+            });
+        });
     }
 
     private _waitForData(): Promise<void> {

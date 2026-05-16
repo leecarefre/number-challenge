@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, tween, Vec3, Camera } from 'cc';
+import { _decorator, Component, Node, tween, Vec3 } from 'cc';
 import { LevelData, generateLevel } from './LevelGenerator';
 import { GridRenderer } from './GridRenderer';
 import { LineRenderer } from './LineRenderer';
@@ -23,7 +23,6 @@ export class GameController extends Component {
     @property(GridRenderer) gridRenderer: GridRenderer | null = null;
     @property(LineRenderer) lineRenderer: LineRenderer | null = null;
     @property(InputHandler) inputHandler: InputHandler | null = null;
-    @property(Node)         cameraNode: Node | null = null;
 
     private _levelData: LevelData | null = null;
     private _state: GameState = 'idle';
@@ -32,10 +31,7 @@ export class GameController extends Component {
     private _currentCol = -1;
     private _lives = 3;
     private _isTutorial = false;
-    private _magnified = false;
     private _callbacks: GameEventCallbacks = {};
-
-    get isMagnified(): boolean { return this._magnified; }
 
     // ─── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -102,19 +98,6 @@ export class GameController extends Component {
         this._state = 'playing';
         this.inputHandler?.setActive(true);
         this._callbacks.onLivesChanged?.(this._lives);
-    }
-
-    useMagnifier() {
-        if (!this.cameraNode) return;
-        const cam = this.cameraNode.getComponent(Camera);
-        if (!cam) return;
-        // Track an explicit toggle flag instead of inferring from current
-        // orthoHeight — the inferred check raced the in-flight tween and
-        // could leave the camera stuck zoomed-in for the user.
-        this._magnified = !this._magnified;
-        const target = this._magnified ? 380 : 667;
-        tween(cam).stop();
-        tween(cam).to(0.25, { orthoHeight: target }).start();
     }
 
     // ─── Drag validation ───────────────────────────────────────────────────────

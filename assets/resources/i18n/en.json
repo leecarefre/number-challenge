@@ -87,5 +87,9 @@
   "all_clear_msg": "Congratulations! You've beaten all 20 levels. You can replay any level for a better star rating.",
 
   "error_ad_unavailable": "Ad not available, please try again later.",
-  "loading": "Loading..."
+  "loading": "Loading...",
+
+  "item_no_hint": "No Hints Left",
+  "item_no_range": "No Range Hints Left",
+  "item_watch_ad_get": "Watch an ad to get 1 item"
 }

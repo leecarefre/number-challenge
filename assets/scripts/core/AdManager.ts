@@ -3,7 +3,7 @@ import '../mock/TTMinisMock';
 
 const { ccclass } = _decorator;
 
-// Replace these with real adUnitIds before release
+// ← 在 TikTok 开发者控制台 → Ad Units 获取真实 ID 后替换
 const AD_UNIT_STAMINA = 'YOUR_STAMINA_AD_UNIT_ID';
 const AD_UNIT_REVIVE  = 'YOUR_REVIVE_AD_UNIT_ID';
 const AD_UNIT_ITEM    = 'YOUR_ITEM_AD_UNIT_ID';
@@ -27,17 +27,26 @@ export class AdManager extends Component {
     showRewardedAd(adUnitId: string): Promise<boolean> {
         return new Promise(resolve => {
             const ad = TTMinis.game.createRewardedVideoAd({ adUnitId });
+
+            const cleanup = () => {
+                ad.offClose();
+                ad.offError();
+            };
+
             ad.onClose(res => {
+                cleanup();
                 resolve(res.isEnded);
             });
             ad.onError(err => {
                 console.warn('[Ad] Error:', err);
+                cleanup();
                 resolve(false);
             });
             ad.load()
                 .then(() => ad.show())
                 .catch(err => {
                     console.warn('[Ad] Show failed:', err);
+                    cleanup();
                     resolve(false);
                 });
         });

@@ -8,6 +8,7 @@ import { GameController } from '../gameplay/GameController';
 import { GameManager } from '../core/GameManager';
 import { DataManager } from '../core/DataManager';
 import { AudioManager } from '../core/AudioManager';
+import { AdManager } from '../core/AdManager';
 import { I18nManager } from '../core/I18nManager';
 import { TutorialManager } from '../tutorial/TutorialManager';
 
@@ -97,69 +98,136 @@ export class GameUI extends Component {
         // Method kept as a hook so item counts can re-render later if needed.
     }
 
-    private _toggleMagnify() {
-        this.gameController?.useMagnifier();
-        this._refreshMagnifyState();
-    }
-
-    private _refreshMagnifyState() {
-        if (!this.magnifyBtn) return;
-        const active = this.gameController?.isMagnified ?? false;
-        const C_ACTIVE = new Color(255, 195, 60, 240);
-        const C_IDLE   = new Color(182,  97, 62, 220);
-        _paintRoundedBg(this.magnifyBtn, active ? C_ACTIVE : C_IDLE, 18);
-        // Reattach the icon last so the freshly-painted bg doesn't cover it.
-        const icon = this.magnifyBtn.getChildByName('__icon-magnify__');
-        if (icon) icon.setSiblingIndex(99);
-        if (active) _glowPulse(this.magnifyBtn);
-    }
-
     private _tryUseHint() {
-        const items = DataManager.inst.data.items;
-        if (items.hint <= 0) {
-            this._showItemEmptyToast(this.hintBtn);
+        if (DataManager.inst.data.items.hint <= 0) {
+            this._showGetItemDialog('hint');
             return;
         }
         this.gameController?.useHint();
     }
 
     private _tryUseRangeHint() {
-        const items = DataManager.inst.data.items;
-        if (items.rangeHint <= 0) {
-            this._showItemEmptyToast(this.rangeHintBtn);
+        if (DataManager.inst.data.items.rangeHint <= 0) {
+            this._showGetItemDialog('rangeHint');
             return;
         }
         this.gameController?.useRangeHint();
     }
 
-    private _showItemEmptyToast(host: Node | null) {
-        if (!host) return;
-        // Reuse a single toast node so rapid taps don't spawn duplicates.
-        const toastName = '__empty-toast__';
-        let toast = host.getChildByName(toastName);
-        if (!toast) {
-            toast = new Node(toastName);
-            const ut = toast.addComponent(UITransform);
-            ut.setContentSize(180, 30);
-            const lbl = toast.addComponent(Label);
-            lbl.string          = '0';
-            lbl.fontSize        = 22;
-            lbl.color           = new Color(255, 200, 80, 255);
-            lbl.isBold          = true;
+    private _showGetItemDialog(type: 'hint' | 'rangeHint') {
+        const PANEL_W  = 460;
+        const PANEL_H  = 320;
+        const PAD_X    = PANEL_W - 96;   // 48px horizontal padding each side
+        const BTN_W    = PANEL_W - 80;   // 40px padding each side
+        const C_PANEL  = new Color(255, 252, 244, 255);
+        const C_AD_BTN = new Color(182,  97,  62, 255);
+        const C_CAN    = new Color(160, 140, 120, 255);
+        const C_TXT    = new Color( 61,  43,  31, 255);
+        const C_WHITE  = new Color(255, 255, 255, 255);
+        const C_SUB    = new Color(120,  90,  70, 200);
+
+        const i18n = I18nManager.inst;
+
+        const dialogName = '__item-ad-dialog__';
+        this.node.getChildByName(dialogName)?.destroy();
+
+        const dialog = new Node(dialogName);
+        this.node.addChild(dialog);
+        dialog.setSiblingIndex(999);
+
+        // Dimmed overlay
+        const overlay = new Node('overlay');
+        overlay.addComponent(UITransform).setContentSize(750, 1334);
+        const og = overlay.addComponent(Graphics);
+        og.fillColor = new Color(0, 0, 0, 110);
+        og.rect(-375, -667, 750, 1334);
+        og.fill();
+        dialog.addChild(overlay);
+
+        // Panel
+        const panel = new Node('panel');
+        panel.addComponent(UITransform).setContentSize(PANEL_W, PANEL_H);
+        const pg = panel.addComponent(Graphics);
+        pg.fillColor = C_PANEL;
+        pg.roundRect(-PANEL_W / 2, -PANEL_H / 2, PANEL_W, PANEL_H, 24);
+        pg.fill();
+        dialog.addChild(panel);
+
+        const addLabel = (str: string, size: number, color: Color,
+                          bold: boolean, y: number): Label => {
+            const n = new Node();
+            n.addComponent(UITransform).setContentSize(PAD_X, size + 16);
+            const lbl = n.addComponent(Label);
+            lbl.string = str; lbl.fontSize = size;
+            lbl.color  = color; lbl.isBold = bold;
             lbl.horizontalAlign = 1;
-            host.addChild(toast);
-        }
-        const lbl = toast.getComponent(Label)!;
-        lbl.string = I18nManager.inst.t('item_empty') || '0 left — visit shop';
-        toast.setPosition(0, 80, 0);
-        let op = toast.getComponent(UIOpacity);
-        if (!op) op = toast.addComponent(UIOpacity);
-        op.opacity = 255;
-        tween(op).stop();
-        tween(op)
-            .delay(0.9)
-            .to(0.3, { opacity: 0 })
-            .start();
+            n.setPosition(0, y, 0);
+            panel.addChild(n);
+            return lbl;
+        };
+
+        const addBtn = (str: string, bg: Color, y: number): Node => {
+            const btn = new Node();
+            btn.addComponent(UITransform).setContentSize(BTN_W, 68);
+            const g = btn.addComponent(Graphics);
+            g.fillColor = bg;
+            g.roundRect(-BTN_W / 2, -34, BTN_W, 68, 16);
+            g.fill();
+            btn.addComponent(Button);
+            const ln = new Node();
+            ln.addComponent(UITransform).setContentSize(BTN_W, 68);
+            const lbl = ln.addComponent(Label);
+            lbl.string = str; lbl.fontSize = 24;
+            lbl.isBold = true; lbl.color = C_WHITE;
+            lbl.horizontalAlign = 1;
+            btn.addChild(ln);
+            btn.setPosition(0, y, 0);
+            panel.addChild(btn);
+            return btn;
+        };
+
+        // Title (y=108) — i18n key
+        const titleKey = type === 'hint' ? 'item_no_hint' : 'item_no_range';
+        const titleLbl = addLabel(i18n.t(titleKey), 28, C_TXT, true, 108);
+
+        // Sub message (y=52)
+        const subLbl = addLabel(i18n.t('item_watch_ad_get'), 21, C_SUB, false, 52);
+
+        // Watch ad button (y=-24)
+        const adBtn  = addBtn(i18n.t('btn_watch_ad'),  C_AD_BTN, -24);
+        // Cancel button (y=-110)
+        const canBtn = addBtn(i18n.t('btn_cancel'),     C_CAN,   -110);
+
+        // Auto-update labels when language switches
+        const unregLang = i18n.registerCallback(() => {
+            titleLbl.string = i18n.t(titleKey);
+            subLbl.string   = i18n.t('item_watch_ad_get');
+            adBtn.getComponentInChildren(Label)!.string  = i18n.t('btn_watch_ad');
+            canBtn.getComponentInChildren(Label)!.string = i18n.t('btn_cancel');
+        });
+
+        const closeDialog = () => {
+            unregLang();
+            if (dialog.isValid) dialog.destroy();
+            this.gameController?.inputHandler?.setActive(true);
+        };
+
+        canBtn.on(Button.EventType.CLICK, closeDialog, this);
+
+        adBtn.on(Button.EventType.CLICK, async () => {
+            adBtn.getComponent(Button)!.enabled  = false;
+            canBtn.getComponent(Button)!.enabled = false;
+            const watched = await AdManager.inst.showItemAd();
+            closeDialog();
+            if (watched) {
+                DataManager.inst.addItem(type, 1);
+                if (type === 'hint') this.gameController?.useHint();
+                else                 this.gameController?.useRangeHint();
+            }
+        }, this);
+
+        // Pause game input while dialog is open
+        this.gameController?.inputHandler?.setActive(false);
     }
 
     private _showWin(stars: number) {
@@ -265,25 +333,17 @@ export class GameUI extends Component {
         if (gridArea) gridArea.setPosition(0, 15, 0);
 
         // Wire the magnifier's camera ref — the scene leaves cameraNode null
-        // so useMagnifier() returns silently. Falling back to the scene Camera
-        // makes the click visibly do something.
-        if (this.gameController && !this.gameController.cameraNode) {
-            const cam = this.node.getChildByName('Camera')
-                     ?? this.node.parent?.getChildByName('Camera');
-            if (cam) this.gameController.cameraNode = cam;
-        }
+        // Hide the magnify button slot — toolbar is now 2 columns
+        if (this.magnifyBtn) this.magnifyBtn.active = false;
 
-        // Tool buttons — full programmatic rebuild. The scene-stored variants
-        // accumulate stale Label children + a leftover cc.Sprite that quietly
-        // intercepts touches; nuking children and re-attaching the click
-        // handler ensures the buttons actually fire. Hint / Range only show
-        // their icon (per UX request — no "Ad" / count text underneath).
-        // Each handler also runs a press-bounce so clicks read as registered
-        // even when the underlying action no-ops (e.g. items.hint === 0).
+        // Reposition hint and range to be centered as 2 columns
+        this.hintBtn?.setPosition(-130, 0, 0);
+        this.rangeHintBtn?.setPosition(130, 0, 0);
+
+        // Tool buttons — hint and range only
         const toolButtons: Array<[Node | null, string, number, () => void]> = [
-            [this.magnifyBtn,   'magnify', 64, () => this._toggleMagnify()],
-            [this.hintBtn,      'hint',    60, () => this._tryUseHint()],
-            [this.rangeHintBtn, 'range',   60, () => this._tryUseRangeHint()],
+            [this.hintBtn,      'hint',  60, () => this._tryUseHint()],
+            [this.rangeHintBtn, 'range', 60, () => this._tryUseRangeHint()],
         ];
         toolButtons.forEach(([btn, icon, size, action]) => {
             if (!btn) return;
@@ -298,7 +358,6 @@ export class GameUI extends Component {
                 action();
             }, this);
         });
-        this._refreshMagnifyState();
 
         // ── Replace "?" placeholders with sprite icons ──
         // Back arrow on TopBar.SettingsBtn – round dark pill behind icon

@@ -148,7 +148,16 @@
       "Bash(python *)",
       "WebSearch",
       "Bash(node *)",
-      "Bash(claude mcp *)"
+      "Bash(claude mcp *)",
+      "mcp__cocos-creator__scene_get_scene_list",
+      "mcp__cocos-creator__scene_open_scene",
+      "mcp__cocos-creator__scene_get_scene_hierarchy",
+      "mcp__cocos-creator__node_get_node_info",
+      "mcp__cocos-creator__scene_save_scene",
+      "mcp__cocos-creator__component_get_components",
+      "mcp__cocos-creator__project_delete_asset",
+      "mcp__cocos-creator__node_find_nodes",
+      "mcp__cocos-creator__debug_get_node_tree"
     ]
   }
 }

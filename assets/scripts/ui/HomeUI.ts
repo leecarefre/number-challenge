@@ -33,7 +33,7 @@ export class HomeUI extends Component {
     private _unregisterLang: (() => void) | null = null;
 
     onLoad() {
-        AudioManager.inst.playBGM('menu_bgm');
+        AudioManager.inst.playBGM('game_bgm');
 
         // Bind buttons by scene name — no @property wiring needed
         this.node.getChildByName('SignInBtn')

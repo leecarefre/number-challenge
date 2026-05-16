@@ -144,7 +144,7 @@ export class ShopUI extends Component {
                 headerTitleLbl.isBold   = true;
             }
 
-            // Stamina display not shown in shop header
+            // Stamina display is shown above StaminaSection, not in header
             if (headerStamNode) headerStamNode.active = false;
         }
 
@@ -153,48 +153,69 @@ export class ShopUI extends Component {
             nav.setPosition(0, -617, 0);
         }
 
-        // Section backgrounds and positions (pushed lower in the viewport)
-        if (dailySec) { _paintRoundedFixed(dailySec, C_SECTION, 660, 260, 20); dailySec.setPosition(0, 160, 0); }
-        if (stam)     { _paintRoundedFixed(stam,     C_SECTION, 660, 350, 20); stam.setPosition(0, -170, 0); }
+        // Row card color: warm cream, lighter than section bg, used for all item/stamina rows
+        const C_ROW  = new Color(252, 249, 242, 255);
+        const C_PILL = new Color(182,  97,  62, 255);  // terracotta play pill
 
-        // Resize and position the two scene stam buttons; create the 3rd one.
-        stam20Btn?.getComponent(UITransform)?.setContentSize(600, 60);
-        stam20Btn?.setPosition(0, 75, 0);
-        stam50Btn?.getComponent(UITransform)?.setContentSize(600, 60);
-        stam50Btn?.setPosition(0, 0, 0);
+        // ── DailyItemsSection ──
+        // h=226: title(40) + pad(12) + row(68) + gap(8) + row(68) + pad(30)
+        if (dailySec) {
+            _paintRoundedFixed(dailySec, C_SECTION, 660, 226, 20);
+            dailySec.setPosition(0, 180, 0);
+            dailyTitleLbl?.node.setPosition(0, 93, 0);
+
+            const hintBtn  = dailySec.getChildByName('HintAdBtn');
+            const rangeBtn = dailySec.getChildByName('RangeHintAdBtn');
+            hintBtn?.getComponent(UITransform)?.setContentSize(600, 68);
+            hintBtn?.setPosition(0, 27, 0);
+            rangeBtn?.getComponent(UITransform)?.setContentSize(600, 68);
+            rangeBtn?.setPosition(0, -51, 0);
+            _paintRoundedBg(hintBtn,  C_ROW, 14);
+            _paintRoundedBg(rangeBtn, C_ROW, 14);
+        }
+
+        // ── StaminaSection ──
+        // h=310: title(40) + pad(13) + 3×row(68) + 2×gap(8) + pad(31)
+        if (stam) {
+            _paintRoundedFixed(stam, C_SECTION, 660, 310, 20);
+            stam.setPosition(0, -118, 0);
+            stamTitleLbl?.node.setPosition(0, 125, 0);
+        }
+        stam20Btn?.getComponent(UITransform)?.setContentSize(600, 68);
+        stam20Btn?.setPosition(0, 62, 0);
+        stam50Btn?.getComponent(UITransform)?.setContentSize(600, 68);
+        stam50Btn?.setPosition(0, -14, 0);
         if (stam) {
             let ub = stam.getChildByName('__stam-unlim__');
             if (!ub) {
                 ub = new Node('__stam-unlim__');
-                ub.addComponent(UITransform).setContentSize(600, 60);
+                ub.addComponent(UITransform).setContentSize(600, 68);
                 ub.addComponent(Button);
                 stam.addChild(ub);
                 ub.on(Button.EventType.CLICK, this.onBuyUnlimitedStamina, this);
             }
-            ub.setPosition(0, -75, 0);
+            ub.setPosition(0, -90, 0);
             this._unlimitedBtn = ub;
         }
         this._stam50Btn = stam50Btn;
+        _paintRoundedBg(stam20Btn,          C_ROW, 14);
+        _paintRoundedBg(stam50Btn,          C_ROW, 14);
+        _paintRoundedBg(this._unlimitedBtn, C_ROW, 14);
 
         if (dailyTitleLbl) { dailyTitleLbl.color = C_TXT; dailyTitleLbl.isBold = true; }
         if (stamTitleLbl)  { stamTitleLbl.color  = C_TXT; stamTitleLbl.isBold  = true; }
 
-        // Style action buttons in sections
-        if (dailySec) {
-            this._styleActionBtn(dailySec.getChildByName('HintAdBtn'),     C_BTN_GOLD, C_TXT);
-            this._styleActionBtn(dailySec.getChildByName('RangeHintAdBtn'), C_BTN_GOLD, C_TXT);
+        // Stamina label above StaminaSection: add energy icon, no extra text
+        if (this.staminaLabel) {
+            this.staminaLabel.color  = new Color(61, 43, 31, 255);
+            this.staminaLabel.isBold = true;
+            _attachIcon(this.staminaLabel.node, 'energy', 28, -28, 0);
         }
-        this._styleActionBtn(stam20Btn, C_BTN, C_TXT);
-        this._styleActionBtn(stam50Btn, C_BTN, C_TXT);
-        this._styleActionBtn(this._unlimitedBtn, C_BTN, C_TXT);
 
-        // Stamina label color
-        if (this.staminaLabel)        this.staminaLabel.color        = new Color( 61, 43, 31, 255);
-        if (this.hintCountLabel)      this.hintCountLabel.color      = new Color( 61, 43, 31, 255);
-        if (this.rangeHintCountLabel) this.rangeHintCountLabel.color = new Color( 61, 43, 31, 255);
-
-        // ── Replace scene-stored "?" placeholders with text + sprite icons ──
-        const i18n = I18nManager.inst;
+        // ── Icons, text and play pills ──
+        const i18n   = I18nManager.inst;
+        const C_NAME = new Color( 61,  43,  31, 255);   // dark brown for item names
+        const C_SUB  = new Color(160, 120,  90, 200);   // muted brown for secondary text
 
         if (headerTitleLbl) i18n.registerLabel(headerTitleLbl, 'shop_title');
 
@@ -204,25 +225,39 @@ export class ShopUI extends Component {
             const rangeBtn = dailySec.getChildByName('RangeHintAdBtn');
             _clearAllLabels(hintBtn);
             _clearAllLabels(rangeBtn);
-            _attachIcon(hintBtn,  'hint',  40, 0,  20);
-            _attachIcon(rangeBtn, 'range', 40, 0,  20);
-            _attachText(hintBtn,  '×1 Ad', 14, C_TITLE, 0, -22);
-            _attachText(rangeBtn, '×1 Ad', 14, C_TITLE, 0, -22);
+
+            // Layout: [icon x=-215] — [count x=10] — [▶btn x=215]
+            _attachIcon(hintBtn,  'hint',  44, -215, 0);
+            _attachNamedText(hintBtn,  '__count__', '0/3', 19, C_SUB, 10, 0);
+            _attachPlayBtn(hintBtn,  C_PILL, 215);
+
+            _attachIcon(rangeBtn, 'range', 44, -215, 0);
+            _attachNamedText(rangeBtn, '__count__', '0/3', 19, C_SUB, 10, 0);
+            _attachPlayBtn(rangeBtn, C_PILL, 215);
         }
 
         if (stam) {
             if (stamTitleLbl) i18n.registerLabel(stamTitleLbl, 'shop_stamina');
             _clearAllLabels(stam20Btn);
             _clearAllLabels(stam50Btn);
-            _attachIcon(stam20Btn, 'energy', 32, -230, 0);
-            _attachText(stam20Btn, '+20',    24, C_TXT,  -150, 0);
-            _attachText(stam20Btn, '×1 Ad', 15, C_TITLE,  190, 0);
-            _attachIcon(stam50Btn, 'energy', 32, -230, 0);
-            _attachText(stam50Btn, '+50',    24, C_TXT,  -150, 0);
-            _attachNamedText(stam50Btn, '__ad-count__', '×3 Ad', 15, C_TITLE, 190, 0);
             _clearAllLabels(this._unlimitedBtn);
-            _attachText(this._unlimitedBtn, '∞20min', 22, C_TXT,  -140, 0);
-            _attachNamedText(this._unlimitedBtn, '__ad-count__', '×5 Ad', 15, C_TITLE, 190, 0);
+
+            // Layout: [icon x=-215] — [amount x=-100] — [count x=65] — [▶btn x=215]
+            const C_AMT = new Color(61, 43, 31, 255);
+            _attachIcon(stam20Btn, 'energy', 44, -215, 0);
+            _attachText(stam20Btn, '+20',    22, C_AMT, -105, 0);
+            _attachNamedText(stam20Btn, '__count__', '0/1', 19, C_SUB, 65, 0);
+            _attachPlayBtn(stam20Btn, C_PILL, 215);
+
+            _attachIcon(stam50Btn, 'energy', 44, -215, 0);
+            _attachText(stam50Btn, '+50',    22, C_AMT, -105, 0);
+            _attachNamedText(stam50Btn, '__count__', '0/2', 19, C_SUB, 65, 0);
+            _attachPlayBtn(stam50Btn, C_PILL, 215);
+
+            _attachIcon(this._unlimitedBtn, 'energy', 44, -215, 0);
+            _attachText(this._unlimitedBtn, '∞20min', 22, C_AMT, -105, 0);
+            _attachNamedText(this._unlimitedBtn, '__count__', '0/3', 19, C_SUB, 65, 0);
+            _attachPlayBtn(this._unlimitedBtn, C_PILL, 215);
         }
 
         // BottomNav tabs – use cached refs
@@ -254,49 +289,64 @@ export class ShopUI extends Component {
     }
 
     private _updateStamina() {
-        if (this.staminaLabel) {
-            if (DataManager.inst.isUnlimitedStaminaActive()) {
-                this.staminaLabel.string = '∞';
-            } else {
-                this.staminaLabel.string = `${DataManager.inst.data.stamina}`;
-            }
-        }
+        if (!this.staminaLabel) return;
+        this.staminaLabel.string = DataManager.inst.isUnlimitedStaminaActive()
+            ? '∞' : `${DataManager.inst.data.stamina}`;
     }
 
     private _loadDailyCounts() {
         const today = new Date().toISOString().slice(0, 10);
-        const saved = localStorage.getItem(STORAGE_KEY_SHOP_DATE);
-        if (saved !== today) {
-            this._todayCounts = { hint: 0, rangeHint: 0 };
-            localStorage.setItem(STORAGE_KEY_SHOP_DATE, today);
-            localStorage.setItem(STORAGE_KEY_ITEM_COUNTS, JSON.stringify(this._todayCounts));
-        } else {
-            try {
-                this._todayCounts = JSON.parse(localStorage.getItem(STORAGE_KEY_ITEM_COUNTS) ?? '{}');
-            } catch {
+        TTMinis.game.getStorage({
+            key: STORAGE_KEY_SHOP_DATE,
+            success: (res) => {
+                if (res.data !== today) {
+                    this._todayCounts = { hint: 0, rangeHint: 0 };
+                    this._persistDate(today);
+                    this._saveDailyCounts();
+                } else {
+                    TTMinis.game.getStorage({
+                        key: STORAGE_KEY_ITEM_COUNTS,
+                        success: (r) => {
+                            try { this._todayCounts = JSON.parse(r.data); } catch { /**/ }
+                            this._updateItemLabels();
+                        },
+                        fail: () => this._updateItemLabels(),
+                    });
+                }
+            },
+            fail: () => {
                 this._todayCounts = { hint: 0, rangeHint: 0 };
-            }
-        }
+                this._persistDate(today);
+                this._saveDailyCounts();
+            },
+        });
+    }
+
+    private _persistDate(date: string) {
+        TTMinis.game.setStorage({ key: STORAGE_KEY_SHOP_DATE, data: date });
     }
 
     private _saveDailyCounts() {
-        localStorage.setItem(STORAGE_KEY_ITEM_COUNTS, JSON.stringify(this._todayCounts));
+        TTMinis.game.setStorage({
+            key: STORAGE_KEY_ITEM_COUNTS,
+            data: JSON.stringify(this._todayCounts),
+        });
+        this._updateItemLabels();
     }
 
     private _updateItemLabels() {
-        const i18n = I18nManager.inst;
-        if (this.hintCountLabel) {
-            this.hintCountLabel.string = i18n.t('shop_daily_limit', {
-                used: this._todayCounts.hint ?? 0,
-                max: DAILY_ITEM_LIMIT,
-            });
-        }
-        if (this.rangeHintCountLabel) {
-            this.rangeHintCountLabel.string = i18n.t('shop_daily_limit', {
-                used: this._todayCounts.rangeHint ?? 0,
-                max: DAILY_ITEM_LIMIT,
-            });
-        }
+        const hintUsed  = this._todayCounts.hint      ?? 0;
+        const rangeUsed = this._todayCounts.rangeHint ?? 0;
+        const dailySec  = this.node.getChildByName('DailyItemsSection');
+        const hintCount  = dailySec?.getChildByName('HintAdBtn')
+                                    ?.getChildByName('__count__')?.getComponent(Label);
+        const rangeCount = dailySec?.getChildByName('RangeHintAdBtn')
+                                    ?.getChildByName('__count__')?.getComponent(Label);
+        if (hintCount)  hintCount.string  = `${hintUsed}/${DAILY_ITEM_LIMIT}`;
+        if (rangeCount) rangeCount.string = `${rangeUsed}/${DAILY_ITEM_LIMIT}`;
+        // Silence legacy inspector-wired labels
+        if (this.hintCountLabel)      this.hintCountLabel.string      = '';
+        if (this.rangeHintCountLabel) this.rangeHintCountLabel.string = '';
     }
 
     async onBuyHint() {
@@ -307,7 +357,6 @@ export class ShopUI extends Component {
         DataManager.inst.addItem('hint', 1);
         this._todayCounts.hint = (this._todayCounts.hint ?? 0) + 1;
         this._saveDailyCounts();
-        this._updateItemLabels();
     }
 
     async onBuyRangeHint() {
@@ -318,7 +367,6 @@ export class ShopUI extends Component {
         DataManager.inst.addItem('rangeHint', 1);
         this._todayCounts.rangeHint = (this._todayCounts.rangeHint ?? 0) + 1;
         this._saveDailyCounts();
-        this._updateItemLabels();
     }
 
     async onBuyStamina20() {
@@ -331,7 +379,7 @@ export class ShopUI extends Component {
 
     async onBuyStamina50() {
         AudioManager.inst.playSFX('button_click');
-        const watched = await this._watchAdsWithProgress(this._stam50Btn, 3);
+        const watched = await this._watchAdsWithProgress(this._stam50Btn, 2);
         if (!watched) return;
         DataManager.inst.addStamina(50);
         this._updateStamina();
@@ -339,16 +387,16 @@ export class ShopUI extends Component {
 
     async onBuyUnlimitedStamina() {
         AudioManager.inst.playSFX('button_click');
-        const watched = await this._watchAdsWithProgress(this._unlimitedBtn, 5);
+        const watched = await this._watchAdsWithProgress(this._unlimitedBtn, 3);
         if (!watched) return;
         DataManager.inst.startUnlimitedStamina(20 * 60 * 1000);
         this._updateStamina();
     }
 
     private _setAdProgress(btn: Node | null, current: number, total: number) {
-        const lbl = btn?.getChildByName('__ad-count__')?.getComponent(Label) ?? null;
+        const lbl = btn?.getChildByName('__count__')?.getComponent(Label) ?? null;
         if (!lbl) return;
-        lbl.string = current > 0 ? `${current}/${total}` : `×${total} Ad`;
+        lbl.string = `${current}/${total}`;
     }
 
     private async _watchAdsWithProgress(btn: Node | null, count: number): Promise<boolean> {
@@ -558,6 +606,105 @@ function _attachSpriteIcon(parent: Node | null | undefined, frame: SpriteFrame,
     }
     icon.setPosition(x, y, 0);
     return icon;
+}
+
+/**
+ * Attaches (or updates) a simple ▶-only play button — no count text.
+ * Used for the redesigned shop rows where the count is shown separately.
+ */
+function _attachPlayBtn(parent: Node | null | undefined, bgColor: Color, x = 0, y = 0) {
+    if (!parent) return;
+    const W = 64;
+    const H = 52;
+
+    let btn = parent.getChildByName('__play-btn__');
+    if (!btn) {
+        btn = new Node('__play-btn__');
+        btn.addComponent(UITransform).setContentSize(W, H);
+        btn.addComponent(Graphics);
+        parent.addChild(btn);
+    }
+    btn.setPosition(x, y, 0);
+    btn.getComponent(UITransform)!.setContentSize(W, H);
+
+    const g = btn.getComponent(Graphics)!;
+    g.clear();
+    g.fillColor = bgColor;
+    g.roundRect(-W / 2, -H / 2, W, H, 12);
+    g.fill();
+
+    let icon = btn.getChildByName('__play-icon__');
+    if (!icon) {
+        icon = new Node('__play-icon__');
+        icon.addComponent(UITransform).setContentSize(W, H);
+        const lbl = icon.addComponent(Label);
+        lbl.string = '▶';
+        lbl.fontSize = 22;
+        lbl.color = new Color(255, 238, 205, 255);
+        lbl.horizontalAlign = 1;
+        btn.addChild(icon);
+    }
+    icon.setPosition(0, 0, 0);
+}
+
+/**
+ * Attaches (or updates) a play pill button on the right side of a row card.
+ * The pill shows a ▶ icon on the left and the ad-count text on the right.
+ * The __ad-count__ child name is kept so _setAdProgress() can update it live.
+ */
+function _attachPlayPill(parent: Node | null | undefined, count: string,
+                          bgColor: Color, x = 0, y = 0) {
+    if (!parent) return;
+    const PILL_W = 112;
+    const PILL_H = 44;
+    const C_WHITE = new Color(255, 255, 255, 255);
+
+    let pill = parent.getChildByName('__play-pill__');
+    if (!pill) {
+        pill = new Node('__play-pill__');
+        pill.addComponent(UITransform).setContentSize(PILL_W, PILL_H);
+        pill.addComponent(Graphics);
+        parent.addChild(pill);
+    }
+    pill.setPosition(x, y, 0);
+    pill.getComponent(UITransform)!.setContentSize(PILL_W, PILL_H);
+
+    const g = pill.getComponent(Graphics)!;
+    g.clear();
+    g.fillColor = bgColor;
+    g.roundRect(-PILL_W / 2, -PILL_H / 2, PILL_W, PILL_H, 12);
+    g.fill();
+
+    const C_PILL_TEXT = new Color(255, 238, 205, 255);  // warm cream — not white
+
+    // ▶ play symbol
+    let playNode = pill.getChildByName('__play-icon__');
+    if (!playNode) {
+        playNode = new Node('__play-icon__');
+        playNode.addComponent(UITransform).setContentSize(26, PILL_H);
+        const lbl = playNode.addComponent(Label);
+        lbl.string = '▶';
+        lbl.fontSize = 14;
+        lbl.color = new Color(255, 238, 205, 160);
+        lbl.horizontalAlign = 1;
+        pill.addChild(playNode);
+    }
+    playNode.setPosition(-28, 0, 0);
+
+    // Ad count text (e.g. ×1, ×2, ×3 — updated live by _setAdProgress)
+    let countNode = pill.getChildByName('__ad-count__');
+    if (!countNode) {
+        countNode = new Node('__ad-count__');
+        countNode.addComponent(UITransform).setContentSize(62, PILL_H);
+        const lbl = countNode.addComponent(Label);
+        lbl.fontSize = 19;
+        lbl.isBold = true;
+        lbl.color = C_PILL_TEXT;
+        lbl.horizontalAlign = 1;
+        pill.addChild(countNode);
+    }
+    countNode.getComponent(Label)!.string = count;
+    countNode.setPosition(18, 0, 0);
 }
 
 function _setTabIcon(tab: Node | null | undefined, iconName: string,

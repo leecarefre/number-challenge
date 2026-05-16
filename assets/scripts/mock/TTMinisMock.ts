@@ -43,6 +43,11 @@ let _showListeners: Array<() => void> = [];
 let _hideListeners: Array<() => void> = [];
 
 const TTMinisMockImpl = {
+    init(opts: { clientKey: string; success?: () => void; fail?: (err: any) => void }) {
+        console.log('[TTMock] game.init() — mock, auto-success');
+        opts.success?.();
+    },
+    canIUse(_feature: string): boolean { return false; },
     setStorage(opts: { key: string; data: string; success?: () => void; fail?: (err: { errMsg: string }) => void }) {
         _storage[opts.key] = opts.data;
         opts.success?.();

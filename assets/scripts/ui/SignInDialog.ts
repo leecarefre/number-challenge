@@ -11,10 +11,15 @@ const { ccclass } = _decorator;
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 const PANEL_W  = 680;
-const PANEL_H  = 480;
-const SLOT_W   = 76;
-const SLOT_H   = 110;
-const SLOT_GAP = 10;
+const PANEL_H  = 570;
+const SLOT_W   = 130;
+const SLOT_H   = 148;
+const SLOT_GAP = 14;
+// 4+3 two-row layout
+const ROW1_Y   =  86;   // center-y of row 1 (days 1-4)
+const ROW2_Y   = -80;   // center-y of row 2 (days 5-7), gap 18px between rows
+const ROW1_TOTAL_W = 4 * SLOT_W + 3 * SLOT_GAP;  // 578
+const ROW2_TOTAL_W = 3 * SLOT_W + 2 * SLOT_GAP;  // 418
 
 // ── Color palette ─────────────────────────────────────────────────────────────
 const C_OVERLAY  = new Color(  0,   0,   0, 130);
@@ -86,26 +91,32 @@ export class SignInDialog extends Component {
         divider.setPosition(0, PANEL_H / 2 - 72, 0);
         panel.addChild(divider);
 
-        // Day slots
-        const totalW = 7 * SLOT_W + 6 * SLOT_GAP;
+        // Day slots — 4+3 two-row grid
         for (let i = 0; i < 7; i++) {
             const slot = this._buildSlot(i + 1);
-            slot.setPosition(-totalW / 2 + SLOT_W / 2 + i * (SLOT_W + SLOT_GAP), 30, 0);
+            if (i < 4) {
+                // Row 1: days 1-4
+                const x = -ROW1_TOTAL_W / 2 + SLOT_W / 2 + i * (SLOT_W + SLOT_GAP);
+                slot.setPosition(x, ROW1_Y, 0);
+            } else {
+                // Row 2: days 5-7, centered
+                const col = i - 4;
+                const x = -ROW2_TOTAL_W / 2 + SLOT_W / 2 + col * (SLOT_W + SLOT_GAP);
+                slot.setPosition(x, ROW2_Y, 0);
+            }
             panel.addChild(slot);
             this._slots.push(slot);
         }
 
         // Claim button
-        this._claimBtn = _button('ClaimBtn', '', C_BTN, 260, 64);
-        this._claimBtn.setPosition(0, -148, 0);
+        this._claimBtn = _button('ClaimBtn', '', C_BTN, 300, 68);
+        this._claimBtn.setPosition(0, -210, 0);
         this._claimBtn.on(Button.EventType.CLICK, this.onClaim, this);
         panel.addChild(this._claimBtn);
 
-        // Status label — sits in the same slot as the Claim button so the
-        // panel doesn't look top-heavy after claiming (button hides, text
-        // takes its place instead of dangling near the bottom edge).
+        // Status label — same position as claim button
         const statusNode = _label('Status', '', 28, C_CLAIMED);
-        statusNode.setPosition(0, -148, 0);
+        statusNode.setPosition(0, -210, 0);
         this._statusLabel = statusNode.getComponent(Label);
         const statusLbl = statusNode.getComponent(Label)!;
         statusLbl.isBold = true;
@@ -120,27 +131,30 @@ export class SignInDialog extends Component {
 
     private _buildSlot(day: number): Node {
         const slot = _node(`Day${day}`, SLOT_W, SLOT_H);
-        _roundRect(slot, C_SLOT_DEF, 12);
+        _roundRect(slot, C_SLOT_DEF, 14);
 
-        const dayLbl = _label('Day', `Day ${day}`, 16, C_DARK);
-        dayLbl.setPosition(0, SLOT_H / 2 - 16, 0);
+        // "Day N" label near top
+        const dayLbl = _label('Day', `Day ${day}`, 18, C_DARK);
+        dayLbl.setPosition(0, SLOT_H / 2 - 22, 0);
         slot.addChild(dayLbl);
 
-        // Reward = icon + count (icon centered, count below)
+        // Reward icon
         const [iconName, count] = REWARDS[day - 1];
-        const iconSize = day === 7 ? 44 : 36;
+        const iconSize = day === 7 ? 52 : 44;
         const iconNode = createIconNode(iconName, iconSize);
-        iconNode.setPosition(0, 8, 0);
+        iconNode.setPosition(0, 10, 0);
         slot.addChild(iconNode);
 
+        // Count text (×2 / ×1) below icon
         if (count) {
-            const countLbl = _label('Count', count, 14, C_WHITE);
-            countLbl.setPosition(0, -16, 0);
+            const countLbl = _label('Count', count, 17, C_DARK);
+            countLbl.setPosition(0, -30, 0);
             slot.addChild(countLbl);
         }
 
-        const state = _label('State', '', 22, C_WHITE);
-        state.setPosition(0, -SLOT_H / 2 + 18, 0);
+        // State icon at bottom (✓ ▶ ✗)
+        const state = _label('State', '', 24, C_DARK);
+        state.setPosition(0, -SLOT_H / 2 + 24, 0);
         slot.addChild(state);
 
         return slot;
